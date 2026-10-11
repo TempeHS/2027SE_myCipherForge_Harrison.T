@@ -72,53 +72,46 @@ def phase1_decrypt(text, key):
     
     return result
 
-def encrypt(text, key):
-    """
-    CipherForge Master Encryption — Applies all 5 phases.
+def encrypt(plaintext, key):
+    """Apply all 5 encryption phases in sequence."""
+    result = plaintext
     
-    Currently implemented: Phases 1-3
-    Coming soon: Phases 4-5
-    """
-    # Phase 1: Substitution — change WHAT characters are
-    result = phase1_encrypt(text, key)
+    # Phase 1: Substitution (shift all characters)
+    result = phase1_encrypt(result, key)
     
-    # Phase 2: Transposition — change WHERE characters are
+    # Phase 2: Transposition (reverse blocks)
     result = phase2_encrypt(result, key)
     
-    # Phase 3: Password-Dependent — destroy frequency patterns
+    # Phase 3: Key-dependent (password-based variable shift)
     result = phase3_encrypt(result, key)
     
-    # TODO: Phase 4 — Noise Injection
-    # result = phase4_encrypt(result, key)
+    # Phase 4: Noise injection (add decoy characters)
+    result = phase4_encrypt(result, key)
     
-    # TODO: Phase 5 — Wild Card
-    # result = phase5_encrypt(result, key)
+    # Phase 5: Wild Card (your invention!)
+    result = phase5_encrypt(result, key)
     
     return result
 
-def decrypt(text, key):
-    """
-    CipherForge Master Decryption — Reverses all 5 phases.
+def decrypt(ciphertext, key):
+    """Reverse all 5 encryption phases."""
+    result = ciphertext
     
-    CRITICAL: Phases reversed in OPPOSITE order!
-    Encrypt: 1 → 2 → 3 → 4 → 5
-    Decrypt: 5 → 4 → 3 → 2 → 1
-    """
-    result = text
+    # Decrypt in REVERSE order!
     
-    # TODO: Phase 5 — Reverse Wild Card (first!)
-    # result = phase5_decrypt(result, key)
+    # Phase 5: Reverse your wild card
+    result = phase5_decrypt(result, key)
     
-    # TODO: Phase 4 — Reverse Noise Injection
-    # result = phase4_decrypt(result, key)
+    # Phase 4: Remove noise characters
+    result = phase4_decrypt(result, key)
     
-    # Phase 3: Reverse Password-Dependent
+    # Phase 3: Reverse password-based shift
     result = phase3_decrypt(result, key)
     
-    # Phase 2: Reverse Transposition
+    # Phase 2: Reverse transposition (self-inverse)
     result = phase2_decrypt(result, key)
     
-    # Phase 1: Reverse Substitution (last!)
+    # Phase 1: Reverse substitution (shift back)
     result = phase1_decrypt(result, key)
     
     return result
@@ -245,3 +238,68 @@ def phase3_decrypt(text, key):
             result += char
     
     return result
+
+
+def phase4_encrypt(text, key):
+    """Insert noise character every N positions."""
+    interval = key.get("noise_interval", 3)
+    noise = key.get("noise_char", "~")
+    
+    result = ""
+    count = 0
+    
+    for char in text:
+        result += char
+        count += 1
+        # Insert noise after every N real characters
+        if count % interval == 0:
+            result += noise
+    
+    return result
+
+
+def phase4_decrypt(text, key):
+    """Remove noise characters at their known positions."""
+    interval = key.get("noise_interval", 3)
+    
+    result = ""
+    real_count = 0
+    i = 0
+    
+    while i < len(text):
+        result += text[i]
+        real_count += 1
+        i += 1
+        
+        # Skip the noise character after every N real characters
+        if real_count % interval == 0 and i < len(text):
+            i += 1  # Skip noise
+    
+    return result
+
+
+
+
+def phase5_encrypt(text, key):
+    """Swap adjacent character pairs."""
+    # Handle empty and single-character strings
+    if len(text) <= 1:
+        return text
+    
+    result = ""
+    
+    for i in range(0, len(text) - 1, 2):
+        # Swap pairs: AB → BA
+        result += text[i + 1]
+        result += text[i]
+    
+    # Handle odd-length strings (last char stays)
+    if len(text) % 2 == 1:
+        result += text[-1]
+    
+    return result
+
+
+def phase5_decrypt(text, key):
+    """Swapping twice returns original — self-inverse!"""
+    return phase5_encrypt(text, key)  # Same operation!
